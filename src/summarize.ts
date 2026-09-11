@@ -1,10 +1,13 @@
+import 'dotenv/config';
+import type { Article, Language, LlmResult, OutputFormat, SummaryLength } from './types.js';
+
 const LENGTH_INSTRUCTIONS = {
   short: 'Summarize in 2-4 concise sentences.',
   medium: 'Summarize in 1-2 focused paragraphs, covering the main claims and important details.',
   long: 'Summarize in 4-7 paragraphs with enough detail to preserve the argument, evidence, and conclusions.',
 } as const;
 
-import type { Article, Language, LlmResult, OutputFormat, SummaryLength } from './types.js';
+
 
 const LANGUAGE_NAMES: Record<Language, string> = { vi: 'Vietnamese', en: 'English', auto: 'the source language' };
 
@@ -31,6 +34,7 @@ async function summarizeWithOpenRouter(prompt: string): Promise<LlmResult> {
 
   const model = process.env.OPENROUTER_MODEL || 'openrouter/free';
   const endpoint = 'https://openrouter.ai/api/v1/chat/completions';
+
   const data = await requestWithRetry(endpoint, {
     method: 'POST',
     headers: {
@@ -58,7 +62,17 @@ async function requestWithRetry(endpoint: string, options: RequestInit): Promise
     try {
       const response = await fetch(endpoint, options);
       const data = await response.json() as ProviderResponse;
-      if (!response.ok) throw new Error(data.error?.message || data.error?.status || `LLM request failed (${response.status})`);
+      if (!response.ok) {
+        const message = data.error?.message || data.error?.status || `LLM request failed (${response.status})`;
+        const retryable = response.status === 429 || response.status >= 500;
+        if (retryable && attempt === 0) {
+          const retryAfter = Number(response.headers.get('retry-after') || 0);
+          const delayMs = retryAfter > 0 ? retryAfter * 1000 : 2_000;
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+          continue;
+        }
+        throw new Error(`OpenRouter ${response.status}: ${message}${response.status === 429 ? ' (free model is rate-limited; try again later or set OPENROUTER_MODEL to another free model)' : ''}`);
+      }
       return data;
     } catch (error: unknown) {
       lastError = error;
