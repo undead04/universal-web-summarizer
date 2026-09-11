@@ -52,7 +52,7 @@ Thiết kế theo 4 module độc lập để dễ bảo trì và mở rộng sa
 ### [3] Summarize — Gọi LLM tóm tắt
 - Cắt bớt nội dung nếu quá dài (giới hạn theo context window của model) để tránh lỗi hoặc tốn phí không cần thiết.
 - Build prompt động theo `summaryLength`, `language`, `outputFormat`.
-- Gọi API LLM (OpenAI/Anthropic), có retry (1-2 lần) nếu request lỗi tạm thời.
+- Gọi OpenRouter API bằng key của Actor owner, mặc định dùng model `openrouter/free`, có retry (1-2 lần) nếu request lỗi tạm thời.
 
 ### [4] Output — Trả kết quả
 - Ghi kết quả vào Dataset theo cấu trúc chuẩn (xem mục 4).
@@ -114,7 +114,7 @@ Lỗi:
 - [x] Cài đặt dependencies: `got-scraping`, `@mozilla/readability`, `jsdom`, `playwright` (optional fallback)
 - [x] Viết module Fetch (HTTP nhanh, fallback Playwright)
 - [x] Viết module Extract dùng Readability
-- [x] Viết module Summarize gọi Gemini API, xử lý prompt theo input
+- [x] Viết module Summarize gọi OpenRouter model free, xử lý prompt theo input
 - [x] Viết module Output, push kết quả vào Dataset
 - [x] Chuyển source sang TypeScript, strict typecheck và build `dist/`
 - [x] Xử lý lỗi ở từng bước, không để actor crash toàn bộ
@@ -127,18 +127,19 @@ Lỗi:
 
 - [x] Syntax check toàn bộ module
 - [x] Smoke test fetch và Readability với `example.com`
-- [x] Smoke test Gemini adapter bằng mock response
+- [x] Smoke test OpenRouter adapter bằng mock response
 - [x] Kiểm tra schema và nhánh lỗi của Actor
-- [ ] Chạy Gemini API thật bằng `GEMINI_API_KEY`
+- [ ] Chạy OpenRouter API thật bằng `OPENROUTER_API_KEY`
 - [ ] Chạy đủ 5-10 loại trang trước khi publish
 
 ### Việc còn lại để deploy
 
 1. Tạo Actor trên Apify Console và kết nối source này.
-2. Cấu hình secret `GEMINI_API_KEY`.
-3. Chọn pricing `Pay-per-event`, chỉ tính phí khi output có `status: "success"`.
-4. Chạy test thật với nhiều loại URL.
-5. Publish public sau khi kiểm tra Dataset và chi phí.
+2. Cấu hình secret `OPENROUTER_API_KEY`.
+3. Tuỳ chọn cấu hình `OPENROUTER_MODEL` (mặc định `openrouter/free`).
+4. Chọn pricing `Pay-per-event`, chỉ tính phí khi output có `status: "success"`.
+5. Chạy test thật với nhiều loại URL.
+6. Publish public sau khi kiểm tra Dataset và chi phí.
 
 ---
 

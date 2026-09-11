@@ -22,42 +22,31 @@ export async function summarizeArticle({ title, text, summaryLength, language, o
     `Title: ${title}\n\nArticle:\n${content}`,
   ].join('\n');
 
-  if (process.env.GEMINI_API_KEY) return summarizeWithGemini(prompt);
-  if (process.env.OPENAI_API_KEY) return summarizeWithOpenAi(prompt);
-  throw new Error('GEMINI_API_KEY or OPENAI_API_KEY is required');
+  return summarizeWithOpenRouter(prompt);
 }
 
-async function summarizeWithGemini(prompt: string): Promise<LlmResult> {
-  const apiKey = process.env.GEMINI_API_KEY as string;
-  const model = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
-  const data = await requestWithRetry(endpoint, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2 } }),
-  });
-  const summary = data.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('').trim();
-  if (!summary) throw new Error('Gemini returned an empty summary');
-  return { summary, usage: data.usageMetadata || null, model };
-}
+async function summarizeWithOpenRouter(prompt: string): Promise<LlmResult> {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) throw new Error('OPENROUTER_API_KEY is not configured');
 
-async function summarizeWithOpenAi(prompt: string): Promise<LlmResult> {
-  const apiKey = process.env.OPENAI_API_KEY as string;
-  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
-  const endpoint = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1/chat/completions';
+  const model = process.env.OPENROUTER_MODEL || 'openrouter/free';
+  const endpoint = 'https://openrouter.ai/api/v1/chat/completions';
   const data = await requestWithRetry(endpoint, {
     method: 'POST',
-    headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
+    headers: {
+      authorization: `Bearer ${apiKey}`,
+      'content-type': 'application/json',
+      'http-referer': process.env.OPENROUTER_SITE_URL || 'https://apify.com',
+      'x-title': process.env.OPENROUTER_APP_NAME || 'Universal Web Summarizer',
+    },
     body: JSON.stringify({ model, temperature: 0.2, messages: [{ role: 'user', content: prompt }] }),
   });
   const summary = data.choices?.[0]?.message?.content?.trim();
-  if (!summary) throw new Error('OpenAI returned an empty summary');
+  if (!summary) throw new Error('OpenRouter returned an empty summary');
   return { summary, usage: data.usage || null, model };
 }
 
 interface ProviderResponse {
-  candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  usageMetadata?: Record<string, unknown>;
   choices?: Array<{ message?: { content?: string } }>;
   usage?: Record<string, unknown>;
   error?: { message?: string; status?: string };

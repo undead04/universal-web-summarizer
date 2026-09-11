@@ -6,7 +6,7 @@ Apify Actor v1 that accepts one URL, extracts its main article content, and retu
 
 ```powershell
 npm install
-$env:GEMINI_API_KEY = "your-key"
+$env:OPENROUTER_API_KEY = "your-key"
 npm start
 ```
 
@@ -25,7 +25,7 @@ The input is read from Apify Actor input. For local runs, create `storage/key_va
 }
 ```
 
-Gemini is used when `GEMINI_API_KEY` is set. The default model is `gemma-4-26b-a4b-it`; override it with `GEMINI_MODEL`. For the previous provider, set `OPENAI_API_KEY` instead, optionally with `OPENAI_MODEL` and `OPENAI_BASE_URL`.
+The Actor uses your OpenRouter account key from `OPENROUTER_API_KEY`. The default model is `openrouter/free`; override it with `OPENROUTER_MODEL`. Free routing still has provider rate limits and availability limits, but the user does not need to enter an API key.
 
 ## Pipeline
 
@@ -37,6 +37,7 @@ Gemini is used when `GEMINI_API_KEY` is set. The default model is `gemma-4-26b-a
 
 1. Create an Actor and connect this repository, or build it from the project directory.
 2. Set the Actor build/start commands to `npm install` and `npm start`; `npm start` runs the TypeScript build before starting `dist/main.js`.
-3. Set `GEMINI_API_KEY` as a secret environment variable.
-4. Set the Actor input schema to `.actor/input_schema.json`.
-5. Run the five smoke cases in the plan: static article, blog, news page, SPA, and a blocked or invalid URL.
+3. Set `OPENROUTER_API_KEY` as a secret environment variable and keep it private.
+4. Optionally set `OPENROUTER_MODEL` (default: `openrouter/free`).
+5. Set the Actor input schema to `.actor/input_schema.json`.
+6. Run the five smoke cases in the plan: static article, blog, news page, SPA, and a blocked or invalid URL.
