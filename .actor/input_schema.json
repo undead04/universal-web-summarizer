@@ -33,6 +33,7 @@
       "type": "string",
       "editor": "select",
       "enum": ["paragraph", "bullet_points"],
+      "description": "Choose the desired output format.",
       "default": "paragraph"
     }
   }
