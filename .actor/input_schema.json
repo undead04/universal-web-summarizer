@@ -1,0 +1,39 @@
+{
+  "title": "Universal Web Summarizer input",
+  "type": "object",
+  "schemaVersion": 1,
+  "required": ["url"],
+  "properties": {
+    "url": {
+      "title": "URL",
+      "type": "string",
+      "description": "The web page to summarize.",
+      "editor": "textfield",
+      "prefill": "https://example.com",
+      "pattern": "^https?://.+"
+    },
+    "summaryLength": {
+      "title": "Summary length",
+      "type": "string",
+      "description": "Controls the approximate size of the summary.",
+      "editor": "select",
+      "enum": ["short", "medium", "long"],
+      "default": "medium"
+    },
+    "language": {
+      "title": "Output language",
+      "type": "string",
+      "description": "Use auto to keep the source language.",
+      "editor": "select",
+      "enum": ["vi", "en", "auto"],
+      "default": "auto"
+    },
+    "outputFormat": {
+      "title": "Output format",
+      "type": "string",
+      "editor": "select",
+      "enum": ["paragraph", "bullet_points"],
+      "default": "paragraph"
+    }
+  }
+}
